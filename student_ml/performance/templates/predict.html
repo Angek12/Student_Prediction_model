@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #2ecc71;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #2ecc71;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .predict-btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .result.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .result h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            font-size: 1.1em;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2ecc71;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-left: 4px solid #2ecc71;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .info-card h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Student Performance Predictor</h1>
+            <p>Predict academic performance using machine learning</p>
+        </div>
+
+        <div class="info-card">
+            <h4>How it works</h4>
+            <p>Our AI model analyzes study habits, sleep patterns, and academic history to predict your performance
+                index. Fill in the details below to get your personalized prediction!</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-group">
+                <label for="hours_studied">Hours Studied per Day</label>
+                <input type="number" id="hours_studied" name="hours_studied" min="0" max="24" required>
+            </div>
+
+            <div class="form-group">
+                <label for="previous_scores">Previous Test Scores (0-100)</label>
+                <input type="number" id="previous_scores" name="previous_scores" min="0" max="100" required>
+            </div>
+
+            <div class="form-group">
+                <label for="extracurricular">Extracurricular Activities</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="extracurricular" name="extracurricular">
+                    <label for="extracurricular">I participate in extracurricular activities</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="sleep_hours">Sleep Hours per Night</label>
+                <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="24" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sample_papers">Sample Papers Practiced</label>
+                <input type="number" id="sample_papers" name="sample_papers" min="0" required>
+            </div>
+
+            <button type="submit" class="predict-btn">Predict My Performance</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your data...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3 id="resultTitle"></h3>
+            <p id="resultMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+
+            // Show loading
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            // Get form data
+            const formData = new FormData(this);
+            const data = {
+                hours_studied: parseInt(formData.get('hours_studied')),
+                previous_scores: parseInt(formData.get('previous_scores')),
+                extracurricular: formData.get('extracurricular') === 'on',
+                sleep_hours: parseInt(formData.get('sleep_hours')),
+                sample_papers: parseInt(formData.get('sample_papers'))
+            };
+
+            try {
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const responseData = await response.json();
+
+                if (response.ok) {
+                    const performanceIndex = responseData.predicted_performance_index;
+                    let status = '';
+
+                    if (performanceIndex >= 80) {
+                        status = 'Excellent';
+                        message = `Your predicted performance index is ${performanceIndex}. You're on track for outstanding results!`;
+                    } else if (performanceIndex >= 60) {
+                        status = 'Good';
+                        message = `Your predicted performance index is ${performanceIndex}. Keep up the great work!`;
+                    } else if (performanceIndex >= 40) {
+                        status = 'Needs Improvement';
+                        message = `Your predicted performance index is ${performanceIndex}. There's room for improvement - consider studying more or getting better sleep!`;
+                    } else {
+                        status = 'Requires Focus';
+                        message = `Your predicted performance index is ${performanceIndex}. Focus on consistent study habits and you'll see improvement.`;
+                    }
+
+                    resultTitle.textContent = `Performance Prediction - ${status}`;
+                    resultMessage.textContent = message;
+                    result.className = 'result success';
+                } else {
+                    throw new Error('Prediction failed');
+                }
+            } catch (error) {
+                resultTitle.textContent = 'Prediction Error';
+                resultMessage.textContent = 'Sorry, there was an error making the prediction. Please try again.';
+                result.className = 'result error';
+            }
+
+            // Hide loading and show result
+            loading.style.display = 'none';
+            result.style.display = 'block';
+        });
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+
+</html>
