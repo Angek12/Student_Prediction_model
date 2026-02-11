@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Performance Predictor</title>
+    <title>Student Performance</title>
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            background: white;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -40,10 +40,6 @@
             color: #333;
             font-size: 2.5em;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         .header p {
@@ -77,9 +73,9 @@
         input[type="number"]:focus,
         select:focus {
             outline: none;
-            border-color: #2ecc71;
+            border-color: #555;
             background: white;
-            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+            box-shadow: 0 0 0 3px rgba(85, 85, 85, 0.1);
         }
 
         .checkbox-group {
@@ -92,7 +88,7 @@
         input[type="checkbox"] {
             width: 20px;
             height: 20px;
-            accent-color: #2ecc71;
+            accent-color: #555;
         }
 
         .checkbox-group label {
@@ -103,7 +99,7 @@
         .predict-btn {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            background: #555;
             color: white;
             border: none;
             border-radius: 10px;
@@ -116,7 +112,7 @@
 
         .predict-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+            box-shadow: 0 10px 20px rgba(85, 85, 85, 0.3);
         }
 
         .predict-btn:active {
@@ -132,22 +128,13 @@
         }
 
         .result.success {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            background: #555;
             color: white;
         }
 
         .result.error {
             background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: white;
-        }
-
-        .result h3 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-
-        .result p {
-            font-size: 1.1em;
         }
 
         .loading {
@@ -158,7 +145,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #2ecc71;
+            border-top: 4px solid #555;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -178,7 +165,7 @@
 
         .info-card {
             background: #f8f9fa;
-            border-left: 4px solid #2ecc71;
+            border-left: 4px solid #555;
             padding: 15px;
             margin-bottom: 30px;
             border-radius: 5px;
@@ -200,14 +187,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Student Performance Predictor</h1>
-            <p>Predict academic performance using machine learning</p>
-        </div>
-
-        <div class="info-card">
-            <h4>How it works</h4>
-            <p>Our AI model analyzes study habits, sleep patterns, and academic history to predict your performance
-                index. Fill in the details below to get your personalized prediction!</p>
+            <h1>Student Performance</h1>
+            <p>Predict academic performance</p>
         </div>
 
         <form id="predictionForm">
@@ -262,19 +243,33 @@
             const resultTitle = document.getElementById('resultTitle');
             const resultMessage = document.getElementById('resultMessage');
 
+            // Get form data
+            const formData = new FormData(this);
+            const hoursStudied = parseInt(formData.get('hours_studied')) || 0;
+            const sleepHours = parseInt(formData.get('sleep_hours')) || 0;
+
+            // Client-side validation: total hours must not exceed 24
+            const totalHours = hoursStudied + sleepHours;
+            if (totalHours > 24) {
+                resultTitle.textContent = 'Validation Error';
+                resultMessage.textContent = `Total hours studied and sleep (${totalHours}) cannot exceed 24 hours in a day.`;
+                result.className = 'result error';
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                return;
+            }
+
+            const data = {
+                hours_studied: hoursStudied,
+                previous_scores: parseInt(formData.get('previous_scores')),
+                extracurricular: formData.get('extracurricular') === 'on',
+                sleep_hours: sleepHours,
+                sample_papers: parseInt(formData.get('sample_papers'))
+            };
+
             // Show loading
             loading.style.display = 'block';
             result.style.display = 'none';
-
-            // Get form data
-            const formData = new FormData(this);
-            const data = {
-                hours_studied: parseInt(formData.get('hours_studied')),
-                previous_scores: parseInt(formData.get('previous_scores')),
-                extracurricular: formData.get('extracurricular') === 'on',
-                sleep_hours: parseInt(formData.get('sleep_hours')),
-                sample_papers: parseInt(formData.get('sample_papers'))
-            };
 
             try {
                 const response = await fetch('/api/predict/', {
@@ -310,11 +305,36 @@
                     resultMessage.textContent = message;
                     result.className = 'result success';
                 } else {
-                    throw new Error('Prediction failed');
+                    // Try to surface backend validation or error messages
+                    let errorMessage = 'Sorry, there was an error making the prediction. Please check your input and try again.';
+                    if (responseData && typeof responseData === 'object') {
+                        if (typeof responseData.detail === 'string') {
+                            errorMessage = responseData.detail;
+                        } else {
+                            const messages = [];
+                            for (const key in responseData) {
+                                if (Object.hasOwn(responseData, key)) {
+                                    const value = responseData[key];
+                                    if (Array.isArray(value)) {
+                                        messages.push(`${key}: ${value.join(', ')}`);
+                                    } else if (typeof value === 'string') {
+                                        messages.push(`${key}: ${value}`);
+                                    }
+                                }
+                            }
+                            if (messages.length > 0) {
+                                errorMessage = messages.join(' | ');
+                            }
+                        }
+                    }
+
+                    resultTitle.textContent = 'Prediction Error';
+                    resultMessage.textContent = errorMessage;
+                    result.className = 'result error';
                 }
             } catch (error) {
                 resultTitle.textContent = 'Prediction Error';
-                resultMessage.textContent = 'Sorry, there was an error making the prediction. Please try again.';
+                resultMessage.textContent = 'Sorry, there was an unexpected error making the prediction. Please try again.';
                 result.className = 'result error';
             }
 

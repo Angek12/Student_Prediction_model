@@ -21,10 +21,8 @@ ENV/
 db.sqlite3
 *.log
 local_settings.py
-
-# =========================
-# ML Models & Data
-# =========================
+media/
+static/
 models/
 *.h5
 *.pt
@@ -32,6 +30,25 @@ models/
 *.onnx
 *.joblib
 *.pkl
+
+# =========================
+# Data files (too large for repo)
+# =========================
+*.csv
+*.xlsx
+*.json
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+python.py
 
 # =========================
 # IDEs & Editors
